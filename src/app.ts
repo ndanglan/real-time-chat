@@ -1,4 +1,4 @@
-import { config } from "dotenv";
+import dotenv from "dotenv";
 import express, { Application, NextFunction, Request, Response } from "express";
 import cors from "cors";
 import bodyParser from "body-parser";
@@ -6,12 +6,14 @@ import morgan from "morgan";
 import methodOverride from "method-override";
 import session from "express-session";
 import ErrorHandler from "./middleware/ErrorHandler";
+import router from "./routes/express";
+import config  from "config";
 
-config();
+dotenv.config();
 const app: Application = express();
-const PORT = process.env.PORT;
+const port = config.get<number>('port');
 // Middleware
-app.use(cors());
+app.use(cors({origin:true}));
 // Normal express config defaults
 app.use(morgan("dev"));
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -32,8 +34,8 @@ app.use(
 // ERROR HANDLER MIDDLEWARE (Last middleware to use)
 app.use(ErrorHandler)
 
+app.use('/api',router)
 
-
-app.listen(PORT, () => {
-	console.log(`Server is listening on port ${PORT}`);
+app.listen(port, () => {
+	console.log(`Server is listening on port ${port}`);
 });

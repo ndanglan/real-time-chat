@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE `user` MODIFY `provider` ENUM('FACEBOOK', 'GOOGLE', 'LINKEDIN', 'EMAIL') NULL;

@@ -1,5 +1,16 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Provider {
+  FACEBOOK
+  GOOGLE
+  LINKEDIN
+  EMAIL
+}
 
 generator client {
   provider = "prisma-client-js"
@@ -10,9 +21,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model user {
+model User {
   id Int @id @default(autoincrement())
-  name String @db.VarChar(255)
+  email String @unique
+  password String 
+  firstName String @db.VarChar(255)
+  lastName String @db.VarChar(255)
+  refreshToken String? @db.VarChar(5000)
+  provider Provider?
+  role Role @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

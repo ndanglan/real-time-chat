@@ -1,34 +1,23 @@
 import { NextFunction, Request, Response } from "express";
-import { PrismaClient } from "@prisma/client";
 import firebaseAdmin from "@config/firebase-admin";
-
-import { signToken } from "@middleware/auth";
-import { verifyToken } from "@utils/jwt";
 import { TokenUserInput } from "@schemas/user.schema";
+import { doLoginUser, doRefreshToken } from "@services/auth-services";
 
-export const excludedFields = ["password"];
-
-const prisma = new PrismaClient();
-
-const loginHandler = async (
+const loginController = async (
 	req: Request<{}, {}, TokenUserInput>,
 	res: Response,
 	next: NextFunction,
 ) => {
 	const { idToken } = req.body;
 	try {
-		const decodedToken = await firebaseAdmin.auth().verifyIdToken(idToken);
-		const { accessToken, refreshToken } = await signToken({
-			sub: decodedToken.uid,
-		});
-
-		return res.status(201).json({ accessToken, refreshToken });
+		const { accessToken, refreshToken, user } = await doLoginUser(idToken);
+		res.status(200).json({ accessToken, refreshToken, userProfile: user });
 	} catch (err: any) {
 		next(err);
 	}
 };
 
-const signUpHandler = async (
+const signUpController = async (
 	req: Request<{}, {}, TokenUserInput>,
 	res: Response,
 	next: NextFunction,
@@ -56,7 +45,7 @@ const signUpHandler = async (
 	}
 };
 
-const refreshTokenHandler = async (
+const refreshTokenController = async (
 	req: Request<
 		{},
 		{},
@@ -68,14 +57,9 @@ const refreshTokenHandler = async (
 	next: NextFunction,
 ) => {
 	try {
-		const decode = await verifyToken(
+		const { accessToken, newRefreshToken } = await doRefreshToken(
 			req.body.refreshToken,
-			"REFRESH_TOKEN_PRIVATE_KEY",
 		);
-		// Create an Access Token
-		const { accessToken, refreshToken: newRefreshToken } = await signToken({
-			sub: decode.sub,
-		});
 
 		// Send Access Token
 		res.status(200).json({
@@ -89,4 +73,4 @@ const refreshTokenHandler = async (
 	}
 };
 
-export { loginHandler, signUpHandler, refreshTokenHandler };
+export { loginController, signUpController, refreshTokenController };

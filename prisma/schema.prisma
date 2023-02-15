@@ -8,7 +8,6 @@ enum Role {
 enum Provider {
   FACEBOOK
   GOOGLE
-  LINKEDIN
   EMAIL
 }
 
@@ -24,9 +23,9 @@ datasource db {
 model User {
   id String @id
   email String @unique
-  firstName String @db.VarChar(255)
-  lastName String @db.VarChar(255)
-  provider Provider?
+  firstName String? @db.VarChar(255)
+  lastName String? @db.VarChar(255)
+  provider Provider @default(EMAIL)
   role Role @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

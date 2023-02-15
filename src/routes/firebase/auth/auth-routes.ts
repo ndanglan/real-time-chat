@@ -1,14 +1,14 @@
 import express from "express";
 import {
-	loginHandler,
-	signUpHandler,
-	refreshTokenHandler,
+	loginController,
+	signUpController,
+	refreshTokenController,
 } from "@controllers/AuthController";
 
 const app = express();
 
-app.post("/login", loginHandler);
-app.post("/signup", signUpHandler);
-app.post("/token", refreshTokenHandler);
+app.post("/login", loginController);
+app.post("/signup", signUpController);
+app.post("/refresh-token", refreshTokenController);
 
 export default app;

@@ -1,25 +1,17 @@
-import config from "config";
-import { signJwt } from "@utils/jwt";
+import { NextFunction, Request, Response } from "express";
+import { verifyToken } from "@utils/jwt";
 
-export const signToken = async (payload: any) => {
-	// Sign the access token
-	const access_token = signJwt(
-		payload,
-		{
-			expiresIn: `${config.get<number>("accessTokenExpiresIn")}m`,
-		},
-		"ACCESS_TOKEN_PRIVATE_KEY",
-	);
-
-	// Sign the refresh token
-	const refresh_token = signJwt(
-		payload,
-		{
-			expiresIn: `${config.get<number>("refreshTokenExpiresIn")}m`,
-		},
-		"REFRESH_TOKEN_PRIVATE_KEY",
-	);
-
-	// Return access token
-	return { accessToken: access_token, refreshToken: refresh_token };
+const authentication = (req: Request, res: Response, next: NextFunction) => {
+	const token = req.headers.authorization;
+	if (!token) {
+		return res.status(401).send("Unauthorized");
+	}
+	try {
+		verifyToken(token, "ACCESS_TOKEN_PRIVATE_KEY");
+		next();
+	} catch (error) {
+		return res.status(401).send("Unauthorized");
+	}
 };
+
+export default authentication;

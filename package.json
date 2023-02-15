@@ -30,7 +30,7 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "@prisma/client": "^4.9.0",
+    "@prisma/client": "^4.10.1",
     "bcryptjs": "^2.4.3",
     "config": "^3.3.9",
     "cookie-parser": "^1.4.6",
@@ -53,6 +53,8 @@
     "@routes": "src/routes",
     "@schemas": "src/schemas",
     "@utils": "src/utils",
-    "@config": "src/config"
+    "@config": "src/config",
+    "@services": "src/services",
+    "@queries": "src/queries"
   }
 }

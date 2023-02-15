@@ -16,7 +16,9 @@
 			"@routes/*": ["routes/*"],
 			"@schemas/*": ["schemas/*"],
 			"@utils/*": ["utils/*"],
-			"@config/*": ["config/*"]
+			"@config/*": ["config/*"],
+			"@services/*": ["services/*"],
+			"@queries/*": ["queries/*"]
 		}
 	},
 	"include": ["./src/**/*", "config"],

@@ -6,15 +6,12 @@ export const signJwt = (
 	key: string,
 ) => {
 	return jwt.sign(payload, process.env[key] as string, {
-		...(options && options),
+		...options,
 	});
 };
 
-export const verifyToken = async (verifyKey:string,privateKey:string)=>{
-	const decoded = await	jwt.verify(
-			verifyKey,
-			process.env[privateKey] as string,
-		);
+export const verifyToken = async (verifyKey: string, privateKey: string) => {
+	const decoded = await jwt.verify(verifyKey, process.env[privateKey] as string);
 
-		return decoded
-}
+	return decoded;
+};

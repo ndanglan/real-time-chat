@@ -22,12 +22,10 @@ datasource db {
 }
 
 model User {
-  id Int @id @default(autoincrement())
+  id String @id
   email String @unique
-  password String 
   firstName String @db.VarChar(255)
   lastName String @db.VarChar(255)
-  refreshToken String? @db.VarChar(5000)
   provider Provider?
   role Role @default(USER)
   createdAt DateTime @default(now())

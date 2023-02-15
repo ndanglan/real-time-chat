@@ -1,133 +1,92 @@
-import { CookieOptions, NextFunction, Request, Response } from "express";
-import { CreateUserInput, LoginUserInput } from "../../schemas/user.schema";
+import { NextFunction, Request, Response } from "express";
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
-import config from "config";
-import jwt_decode from "jwt-decode";
-import jwt from "jsonwebtoken";
+import firebaseAdmin from "@config/firebase-admin";
 
-import { signToken } from "../../middleware/auth";
+import { signToken } from "@middleware/auth";
+import { verifyToken } from "@utils/jwt";
+import { TokenUserInput } from "@schemas/user.schema";
 
 export const excludedFields = ["password"];
 
 const prisma = new PrismaClient();
-const accessTokenCookieOptions: CookieOptions = {
-	expires: new Date(
-		Date.now() + config.get<number>("accessTokenExpiresIn") * 60 * 1000,
-	),
-	maxAge: config.get<number>("accessTokenExpiresIn") * 60 * 1000,
-	httpOnly: true,
-	sameSite: "lax",
-};
-
-if (process.env.NODE_ENV === "production")
-	accessTokenCookieOptions.secure = true;
 
 const loginHandler = async (
-	req: Request<{}, {}, LoginUserInput>,
+	req: Request<{}, {}, TokenUserInput>,
 	res: Response,
 	next: NextFunction,
 ) => {
+	const { idToken } = req.body;
 	try {
-		const user = await prisma.user.findUnique({
-			where: {
-				email: req.body.email,
-			},
-		});
-		// Check if user exist and password is correct
-		if (!user) {
-			return res.status(401);
-		}
-
-		// Create an Access Token
-		const { accessToken, refreshToken } = await signToken(user);
-
-		await prisma.user.update({
-			where: {
-				id: user.id,
-			},
-			data: {
-				refreshToken,
-			},
+		const decodedToken = await firebaseAdmin.auth().verifyIdToken(idToken);
+		const { accessToken, refreshToken } = await signToken({
+			sub: decodedToken.uid,
 		});
 
-		// Send Access Token
-		res.status(200).json({
-			status: "success",
-			accessToken,
-			refreshToken,
-			user,
-		});
+		return res.status(201).json({ accessToken, refreshToken });
 	} catch (err: any) {
 		next(err);
 	}
 };
 
 const signUpHandler = async (
-	req: Request<{}, {}, CreateUserInput>,
+	req: Request<{}, {}, TokenUserInput>,
 	res: Response,
 	next: NextFunction,
 ) => {
 	try {
-		const user = {
-			email: req.body.email,
-			password: bcrypt.hashSync(req.body.password, 8),
-			firstName: req.body.firstName,
-			lastName: req.body.lastName,
-		};
+		const token = req.body.idToken;
+		const decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+		const userRecord = await firebaseAdmin.auth().getUser(decodedToken.uid);
+		console.log({ userRecord });
+		// await prisma.user.create({
+		// 	data: {
+		// 		id:userRecord.uid as string,
+		// 		email:userRecord.email as string,
+		// 		firstName:userRecord.displayName?.split(" ")[0] as string ,
+		// 		lastName:userRecord.displayName?.split(" ")[1] as string
+		// 	},
+		// });
 
-		const response = await prisma.user.create({
-			data: user,
-		});
-
-		res.status(201).json({
-			status: "success",
-			data: {
-				response,
-			},
-		});
+		// res.status(201).json({
+		// 	status:"success",
+		// 	message:"Create account success"
+		// });
 	} catch (err: any) {
 		next(err);
 	}
 };
 
 const refreshTokenHandler = async (
-	req: Request<{}, {}, {
-		refreshToken:string
-	}>,
+	req: Request<
+		{},
+		{},
+		{
+			refreshToken: string;
+		}
+	>,
 	res: Response,
 	next: NextFunction,
 ) => {
-	
-	const refreshToken=req.body.refreshToken;
-	const decodedToken:any =jwt_decode(refreshToken)
-	if(!decodedToken) return res.sendStatus(401)
-
-	const user = await prisma.user.findUnique({
-		where:{
-			id:decodedToken.id
-		}
-	})
-	if(!user) return res.sendStatus(403)
 	try {
-		jwt.verify(
-			refreshToken,
-			config.get<string>("refreshTokenPrivateKey"),
+		const decode = await verifyToken(
+			req.body.refreshToken,
+			"REFRESH_TOKEN_PRIVATE_KEY",
 		);
 		// Create an Access Token
-		const { accessToken, refreshToken:newRefreshToken } = await signToken(user);
+		const { accessToken, refreshToken: newRefreshToken } = await signToken({
+			sub: decode.sub,
+		});
 
 		// Send Access Token
 		res.status(200).json({
 			status: "success",
 			accessToken,
-			refreshToken:newRefreshToken,
-			user,
+			refreshToken: newRefreshToken,
 		});
 	} catch (error) {
-		console.log(error)
-		next(error)
+		console.log(error);
+		next(error);
 	}
 };
 
-export { loginHandler, signUpHandler,refreshTokenHandler };
+export { loginHandler, signUpHandler, refreshTokenHandler };

@@ -1,14 +1,24 @@
 {
-  "compilerOptions": {
-      "target": "ES2016",
-      "module": "commonjs",
-      "outDir": "./dist",
-      "rootDir": "./src",
-      "strict": true,
-      "moduleResolution": "node",
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "forceConsistentCasingInFileNames": true
-  },
-  "include": ["./src/**/*", "config"]
+	"compilerOptions": {
+		"target": "ES2016",
+		"module": "commonjs",
+		"outDir": "./dist",
+		"strict": true,
+		"moduleResolution": "node",
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"forceConsistentCasingInFileNames": true,
+		"resolveJsonModule": true,
+		"baseUrl": "./src",
+		"paths": {
+			"@controllers/*": ["controllers/*"],
+			"@middleware/*": ["middleware/*"],
+			"@routes/*": ["routes/*"],
+			"@schemas/*": ["schemas/*"],
+			"@utils/*": ["utils/*"],
+			"@config/*": ["config/*"]
+		}
+	},
+	"include": ["./src/**/*", "config"],
+	"exclude": ["node_modules", "dist"]
 }

@@ -1,58 +1,25 @@
-import jwt, { SignOptions } from "jsonwebtoken";
 import config from "config";
-import { NextFunction, Request, Response } from "express";
+import { signJwt } from "@utils/jwt";
 
-export const signJwt = (
-	payload: Object,
-	options: SignOptions = {},
-	key: string,
-) => {
-	return jwt.sign(payload, config.get<string>(key), {
-		...(options && options),
-	});
-};
-
-export const signToken = async (user: any) => {
+export const signToken = async (payload: any) => {
 	// Sign the access token
 	const access_token = signJwt(
-		user,
+		payload,
 		{
 			expiresIn: `${config.get<number>("accessTokenExpiresIn")}m`,
 		},
-		"accessTokenPrivateKey",
+		"ACCESS_TOKEN_PRIVATE_KEY",
 	);
 
 	// Sign the refresh token
 	const refresh_token = signJwt(
-		user,
+		payload,
 		{
 			expiresIn: `${config.get<number>("refreshTokenExpiresIn")}m`,
 		},
-		"refreshTokenPrivateKey",
+		"REFRESH_TOKEN_PRIVATE_KEY",
 	);
-		console.log('refresh_token',refresh_token)
+
 	// Return access token
 	return { accessToken: access_token, refreshToken: refresh_token };
-};
-
-export const verifyToken = async (
-	req: Request,
-	res: Response,
-	next: NextFunction,
-) => {
-	const authHeader = req.header("Authorization");
-	const token = authHeader && authHeader.split(" ")[1];
-
-	if (!token) return res.sendStatus(401);
-
-	try {
-		const decoded = jwt.verify(
-			token,
-			config.get<string>("accessTokenPrivateKey"),
-		);
-		console.log(decoded);
-	} catch (error) {
-		console.log(error);
-		return res.sendStatus(403);
-	}
 };
